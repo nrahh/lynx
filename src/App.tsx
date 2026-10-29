@@ -4,10 +4,18 @@ import {
 } from "./themes/theme_values.ts";
 import {Settings} from "lucide-react";
 import {motion} from "motion/react";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import WorkspaceNavigator from "./components/ui/WorkspaceNavigator.tsx";
+import {lynx_api} from "../api/sdk.ts"
+import GeneralPopup from "./components/ui/popups/GeneralPopup.tsx";
 
 export default function App() {
+
+    const [showPopup, setShowPopup] = useState(true);
+
+    useEffect(() => {
+        void lynx_api.directories.core.createPaths()
+    }, []);
 
     //@ts-ignore
     const [currentChat, setCurrentChat] = useState("");
@@ -45,15 +53,33 @@ export default function App() {
                     borderRight: `1px solid ${panel_border_color}`,
                 }} className='w-70 h-full flex flex-col p-3 gap-2 transition-all'>
                     {/*@ts-ignore*/}
-                    <WorkspaceNavigator header={"Chats"} icon={"message-circle"} parentFolder={"asd"} />
+                    <WorkspaceNavigator header={"Chats"} icon={"message-circle"} parentFolder={"chats"} />
                     {/*@ts-ignore*/}
-                    <WorkspaceNavigator header={"Flashcards"} icon={"playing-cards-fan"} parentFolder={"asd"} />
+                    <WorkspaceNavigator header={"Flashcards"} icon={"playing-cards-fan"} parentFolder={"flashcards"} />
                     {/*@ts-ignore*/}
-                    <WorkspaceNavigator header={"Notes"} icon={"notebook-pen"} parentFolder={"asd"} />
+                    <WorkspaceNavigator header={"Notes"} icon={"notebook-pen"} parentFolder={"notes"} />
                     {/*@ts-ignore*/}
-                    <WorkspaceNavigator header={"Quizzes"} icon={"list-todo"} parentFolder={"asd"} />
+                    <WorkspaceNavigator header={"Quizzes"} icon={"list-todo"} parentFolder={"quizzes"} />
                 </div>
             </div>
+
+            {showPopup && (
+                <GeneralPopup
+                    header="Create flashcard"
+                    description="Enter the details below."
+                    fields={[
+                        {title: "Question", description: "Enter the question.", fieldType: "string"},
+                        {title: "Answer", description: "Enter the answer.", fieldType: "string"},
+                        {title: "Difficulty", fieldType: "number"},
+                        {title: "Public", fieldType: "boolean"}
+                    ]}
+                    onSubmit={(values) => {
+                        console.log(values);
+                        setShowPopup(false);
+                    }}
+                    onCancel={() => setShowPopup(false)}
+                />
+            )}
         </div>
     )
 }

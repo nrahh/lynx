@@ -1,4 +1,5 @@
-import { modifyAIPersonality, toggleOllamaStreaming, ollamaCommunication } from "./ai/ollama";
+import {modifyAIPersonality, toggleOllamaStreaming, ollamaCommunication} from "./ai/ollama";
+import {lynxRootFolder, createPaths, createNew, getFiles} from "./directories/manager.ts"
 
 export const lynx_api = {
     ai: {
@@ -6,6 +7,14 @@ export const lynx_api = {
             modifyAIPersonality: modifyAIPersonality,
             toggleOllamaStreaming: toggleOllamaStreaming,
             ollamaCommunication: ollamaCommunication
+        }
+    },
+    directories: {
+        core: {
+            lynxRootFolder: lynxRootFolder,
+            createPaths: createPaths,
+            createNew: createNew,
+            getFiles: getFiles
         }
     }
 }

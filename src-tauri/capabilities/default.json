@@ -1,3 +1,4 @@
+
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
@@ -7,7 +8,29 @@
   ],
   "permissions": [
     "core:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "fs:allow-read",
+    "fs:allow-write",
+    "fs:allow-mkdir",
+    "fs:allow-exists",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$DOCUMENT/Lynx"
+        },
+        {
+          "path": "$DOCUMENT/Lynx/**"
+        },
+        {
+          "path": "$RESOURCE/**"
+        }
+      ]
+    }
   ]
 }

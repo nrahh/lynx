@@ -1,0 +1,15 @@
+{
+  "id": 0,
+  "chatName": "",
+  "topic": "",
+  "subject": "",
+  "createdAt": "",
+  "messages": [
+    {
+      "id": 1,
+      "role": "user",
+      "content": "message",
+      "timestamp": "1793251200000"
+    }
+  ]
+}

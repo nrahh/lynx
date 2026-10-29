@@ -16,6 +16,8 @@
         "width": 800,
         "height": 600,
         "resizable": true,
+        "minHeight": 500,
+        "minWidth": 600,
         "fullscreen": false
       }
     ],
@@ -26,6 +28,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": {
+      "templates/chat_template.json": "templates/chat_template.json"
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

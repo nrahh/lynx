@@ -29,7 +29,7 @@ export async function createPaths() {
     }
 }
 
-export async function createNew(parentFolder: "chats" | "flashcards" | "notes" | "quizzes", chatName: string, topic: string, subject: string) {
+export async function createNew(parentFolder: "chats" | "flashcards" | "notes" | "quizzes", chatName: string, topic: string, subject: string, chatType: string) {
     if (!parentFolder || !chatName || !topic || !subject) return;
 
     const template = JSON.parse(
@@ -41,6 +41,7 @@ export async function createNew(parentFolder: "chats" | "flashcards" | "notes" |
     template.chatName = chatName;
     template.topic = topic;
     template.subject = subject;
+    template.chatType = chatType;
 
     //clone the template and put it inside the parentFolder
     const root = await lynxRootFolder();
@@ -59,18 +60,17 @@ export async function createNew(parentFolder: "chats" | "flashcards" | "notes" |
     );
 }
 
-export async function getFiles(parentFolder: "chats" | "flashcards" | "notes" | "quizzes", getProperty: string
+export async function getFiles(
+    parentFolder: "chats" | "flashcards" | "notes" | "quizzes",
+    getProperty: string
 ) {
     const entries = await readDir(`Lynx/${parentFolder}`, {
         baseDir: BaseDirectory.Document,
     });
 
-    const files = entries.filter(
-        entry => entry.isFile && entry.name.endsWith(".json")
-    );
-
-    return Promise.all(
-        files.map(async (file) => {
+    return entries
+        .filter(entry => entry.isFile && entry.name.endsWith(".json"))
+        .map(async file => {
             const content = await readTextFile(
                 `Lynx/${parentFolder}/${file.name}`,
                 { baseDir: BaseDirectory.Document }
@@ -79,9 +79,31 @@ export async function getFiles(parentFolder: "chats" | "flashcards" | "notes" | 
             const json = JSON.parse(content);
 
             return {
-                id: json.id,
+                id: file.name.replace(/\.json$/, ""),
                 name: json[getProperty],
             };
         })
+        .reduce(async (result, item) => {
+            return [...await result, await item];
+        }, Promise.resolve([] as { id: string; name: string }[]));
+}
+
+export async function getFileContent(
+    parentFolder: "chats" | "flashcards" | "notes" | "quizzes",
+    id: string
+) {
+    const content = await readTextFile(
+        `Lynx/${parentFolder}/${id}.json`,
+        { baseDir: BaseDirectory.Document }
+    );
+
+    return JSON.parse(content);
+}
+
+export async function saveFileContent(parentFolder: string, id: string, file: any) {
+    await writeTextFile(
+        `Lynx/${parentFolder}/${id}.json`,
+        JSON.stringify(file, null, 2),
+        { baseDir: BaseDirectory.Document }
     );
 }

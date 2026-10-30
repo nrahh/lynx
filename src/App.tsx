@@ -7,11 +7,76 @@ import {motion} from "motion/react";
 import {useState, useEffect} from "react";
 import WorkspaceNavigator from "./components/ui/WorkspaceNavigator.tsx";
 import {lynx_api} from "../api/sdk.ts"
-import GeneralPopup from "./components/ui/popups/GeneralPopup.tsx";
+import ChatEnvironment from "./features/ui/ChatEnvironment.tsx";
+import {useSelectedId, useSelectedFolder, changeSelectedId} from "./shared_variables.ts"
+import { loadPlugin } from "./runtime/pluginLoader";
+
+type chat = {
+    id: string;
+    chatName: string;
+    topic: string;
+    subject: string;
+    createdAt: string;
+    chatType: string;
+    messages: {
+        id: number;
+        role: "user" | "assistant";
+        content: string;
+        timestamp: string;
+    }[];
+};
 
 export default function App() {
 
-    const [showPopup, setShowPopup] = useState(true);
+    useEffect(() => {
+        const cleanup = loadPlugin();
+
+        return () => {
+            cleanup?.();
+        };
+    }, []);
+
+    const selected_id = useSelectedId();
+    const selected_folder = useSelectedFolder();
+
+    const [selectedChat, setSelectedChat] = useState<chat | null>(null);
+
+    useEffect(() => {
+        changeSelectedId(null);
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        if (!selected_id) {
+            setSelectedChat(null);
+            return;
+        }
+
+        async function loadChat() {
+            try {
+                const chat = await lynx_api.directories.core.getFileContent(
+                    selected_folder,
+                    selected_id!
+                );
+
+                if (!cancelled) {
+                    setSelectedChat(chat);
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    console.error("Failed to load chat:", error);
+                    setSelectedChat(null);
+                }
+            }
+        }
+
+        void loadChat();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selected_id, selected_folder]);
 
     useEffect(() => {
         void lynx_api.directories.core.createPaths()
@@ -21,7 +86,7 @@ export default function App() {
     const [currentChat, setCurrentChat] = useState("");
 
     return (
-        <div className="w-full h-screen flex flex-col select-none">
+        <div className="w-full h-screen overflow-hidden flex flex-col select-none">
             {/*topbar*/}
             <div style={{
                 backgroundColor: panel_color,
@@ -47,11 +112,11 @@ export default function App() {
                 </div>
             </div>
 
-            <div className="w-full h-full flex flex-row">
+            <div className="w-full flex-1 min-h-0 overflow-hidden flex flex-row">
                 <div style={{
                     backgroundColor: panel_color,
                     borderRight: `1px solid ${panel_border_color}`,
-                }} className='w-70 h-full flex flex-col p-3 gap-2 transition-all'>
+                }} className='w-70 min-w-70 h-full flex flex-col p-3 gap-2 transition-all'>
                     {/*@ts-ignore*/}
                     <WorkspaceNavigator header={"Chats"} icon={"message-circle"} parentFolder={"chats"} />
                     {/*@ts-ignore*/}
@@ -61,25 +126,19 @@ export default function App() {
                     {/*@ts-ignore*/}
                     <WorkspaceNavigator header={"Quizzes"} icon={"list-todo"} parentFolder={"quizzes"} />
                 </div>
-            </div>
 
-            {showPopup && (
-                <GeneralPopup
-                    header="Create flashcard"
-                    description="Enter the details below."
-                    fields={[
-                        {title: "Question", description: "Enter the question.", fieldType: "string"},
-                        {title: "Answer", description: "Enter the answer.", fieldType: "string"},
-                        {title: "Difficulty", fieldType: "number"},
-                        {title: "Public", fieldType: "boolean"}
-                    ]}
-                    onSubmit={(values) => {
-                        console.log(values);
-                        setShowPopup(false);
-                    }}
-                    onCancel={() => setShowPopup(false)}
-                />
-            )}
+                {selectedChat !== null && (
+                    <ChatEnvironment
+                        id={selectedChat.id}
+                        chatName={selectedChat.chatName}
+                        topic={selectedChat.topic}
+                        subject={selectedChat.subject}
+                        createdAt={selectedChat.createdAt}
+                        chatType={selectedChat.chatType}
+                        messages={selectedChat.messages}
+                    />
+                )}
+            </div>
         </div>
     )
 }

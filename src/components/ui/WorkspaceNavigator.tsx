@@ -43,6 +43,7 @@ export default function WorkspaceNavigator(props: workspaceNavigatorProps, selec
     const [expanded, setExpanded] = useState<boolean>(false);
     //this usestate is used for the open states of the popup
     const [showPopup, setShowPopup] = useState<boolean>(false);
+    const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
 
     const selected_id = useSelectedId();
 
@@ -55,8 +56,6 @@ export default function WorkspaceNavigator(props: workspaceNavigatorProps, selec
     if (typeof Icon !== "object" && typeof Icon !== "function") {
         return null;
     }
-
-    const [files, setFiles] = useState<{ id: string; name: string }[]>([]);
 
     async function loadFiles() {
         const entries = await lynx_api.directories.core.getFiles(
@@ -97,7 +96,7 @@ export default function WorkspaceNavigator(props: workspaceNavigatorProps, selec
                 {/*create button*/}
                 <div className="w-full h-full flex flex-col gap-1.5 p-2 overflow-y-scroll scrollbar-thumb-white/10">
                     <motion.button onClick={() => {setShowPopup(true)}} initial={{opacity: 1}} whileHover={{opacity: 0.7}}
-                    className="w-full h-10 flex flex-row gap-1.5 items-center justify-center bg-white/5 rounded-md cursor-pointer">
+                                   className="w-full h-10 flex flex-row gap-1.5 items-center justify-center bg-white/5 rounded-md cursor-pointer">
                         <Plus width={20} height={20} color={workspace_navigator_header_icon_color} />
                         <h3 style={{
                             color: workspace_navigator_header_text_color
@@ -106,7 +105,9 @@ export default function WorkspaceNavigator(props: workspaceNavigatorProps, selec
                     <div className="w-full h-full flex flex-col gap-1.5 overflow-y-scroll">
                         {files.map((file) => (
                             <motion.button
-                                onClick={() => {changeSelectedId(String(file.id))}}
+                                onClick={() => {
+                                    changeSelectedId(String(file.id), props.parentFolder);
+                                }}
                                 style={{
                                     backgroundColor: selected_id === String(file.id) ? workspace_navigator_selected_item_bg_color : workspace_navigator_unselected_item_bg_color,
                                     border: selected_id === String(file.id) ? `1px solid ${workspace_navigator_selected_item_border_color}` : "none",
@@ -129,12 +130,20 @@ export default function WorkspaceNavigator(props: workspaceNavigatorProps, selec
                             {title: "Topic", description: "Enter the topic.", fieldType: "string"},
                             {title: "Subject", description: "Enter the subject.", fieldType: "string"},
                         ]}
-                        onSubmit={(values) => {
+                        onSubmit={async (values) => {
                             const chatName = values[0];
                             const topic = values[1];
                             const subject = values[2];
 
-                            void lynx_api.directories.core.createNew(props.parentFolder, String(chatName), String(topic), String(subject));
+                            await lynx_api.directories.core.createNew(
+                                props.parentFolder,
+                                String(chatName),
+                                String(topic),
+                                String(subject),
+                                String(props.header)
+                            );
+
+                            await loadFiles();
                             setShowPopup(false);
                         }}
                         onCancel={() => setShowPopup(false)}

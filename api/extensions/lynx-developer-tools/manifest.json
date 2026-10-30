@@ -1,0 +1,14 @@
+{
+  "name": "Lynx Developer Tools",
+  "description": "Lynx Developer Tools allows you to view the console and stuff.",
+  "version": "0.1.0",
+  "supported": {
+    "minVersion": "0.1.0-alpha.1",
+    "maxVersion": "0.1.0-alpha.1"
+  },
+  "permissions": [
+    "ui.overlay",
+    "developer.logs",
+    "developer.errors"
+  ]
+}
